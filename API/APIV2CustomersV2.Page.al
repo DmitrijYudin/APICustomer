@@ -24,7 +24,6 @@ page 50002 CustomersAPIv2AJK
                 {
                     Caption = 'Show Size';
                     ShowCaption = true;
-                    ShowMandatory = true;
 
                     trigger OnValidate()
                     begin
