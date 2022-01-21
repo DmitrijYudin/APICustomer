@@ -1,0 +1,33 @@
+{
+  "id": "38dd181c-22fc-4c6c-9350-4fc659861915",
+  "name": "DY API",
+  "publisher": "Dmitry Yudin",
+  "version": "1.0.0.0",
+  "brief": "",
+  "description": "API Customer Extension",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "dependencies": [
+    {
+      "id":  "10cb69d9-bc8a-4d27-970a-9e110e9db2a5",
+      "name":  "_Exclude_APIV2_",
+      "publisher":  "Microsoft",
+      "version":  "17.4.0.0"
+    }
+  ],
+  "screenshots": [],
+  "platform": "1.0.0.0",
+  "application": "17.0.0.0",
+  "idRanges": [
+    {
+      "from": 50000,
+      "to": 50100
+    }
+  ],
+  "contextSensitiveHelpUrl": "https://github.com/DmitrijYudin",
+  "showMyCode": true,
+  "runtime": "6.3"
+}
