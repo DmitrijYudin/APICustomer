@@ -15,12 +15,12 @@
       "id":  "10cb69d9-bc8a-4d27-970a-9e110e9db2a5",
       "name":  "_Exclude_APIV2_",
       "publisher":  "Microsoft",
-      "version":  "17.4.0.0"
+      "version":  "17.9.28504.0"
     }
   ],
   "screenshots": [],
   "platform": "1.0.0.0",
-  "application": "17.0.0.0",
+  "application": "17.9.0.0",
   "idRanges": [
     {
       "from": 50000,

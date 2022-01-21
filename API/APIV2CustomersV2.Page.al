@@ -1,4 +1,4 @@
-page 50000 CustomersAPIv1AJK
+page 50001 CustomersAPIv2AJK
 {
     PageType = API;
     APIPublisher = 'ajk';
@@ -20,28 +20,50 @@ page 50000 CustomersAPIv1AJK
         {
             repeater(Group)
             {
-                field(id; SystemId)
+                field(shoeSize; Rec.ShoeSizeAJK)
+                {
+                    Caption = 'Show Size';
+                    ShowCaption = true;
+                    ShowMandatory = true;
+
+                    trigger OnValidate()
+                    begin
+                        RegisterFieldSet(Rec.FieldNo(ShoeSizeAJK));
+                    end;
+                }
+                field(hairColor; Rec.HairColorAJK)
+                {
+                    Caption = 'Hair Color';
+                    ShowCaption = true;
+                    ShowMandatory = true;
+
+                    trigger OnValidate()
+                    begin
+                        RegisterFieldSet(Rec.FieldNo(HairColorAJK));
+                    end;
+                }
+                field(id; Rec.SystemId)
                 {
                     Caption = 'Id';
                     Editable = false;
                 }
-                field(number; "No.")
+                field(number; Rec."No.")
                 {
                     Caption = 'No.';
                 }
-                field(displayName; Name)
+                field(displayName; Rec.Name)
                 {
                     Caption = 'Display Name';
                     ShowMandatory = true;
 
                     trigger OnValidate()
                     begin
-                        if Name = '' then
+                        if Rec.Name = '' then
                             Error(BlankCustomerNameErr);
-                        RegisterFieldSet(FieldNo(Name));
+                        RegisterFieldSet(Rec.FieldNo(Name));
                     end;
                 }
-                field(type; "Contact Type")
+                field(type; Rec."Contact Type")
                 {
                     Caption = 'Type';
 
@@ -131,29 +153,6 @@ page 50000 CustomersAPIv1AJK
                         RegisterFieldSet(FieldNo("Home Page"));
                     end;
                 }
-                field(salespersonCode; "Salesperson Code")
-                {
-                    Caption = 'Salesperson Code';
-
-                    trigger OnValidate()
-                    begin
-                        RegisterFieldSet(FieldNo("Salesperson Code"));
-                    end;
-                }
-                field(balanceDue; "Balance Due")
-                {
-                    Caption = 'Balance Due';
-                    Editable = false;
-                }
-                field(creditLimit; "Credit Limit (LCY)")
-                {
-                    Caption = 'Credit Limit';
-
-                    trigger OnValidate()
-                    begin
-                        RegisterFieldSet(FieldNo("Credit Limit (LCY)"));
-                    end;
-                }
                 field(taxLiable; "Tax Liable")
                 {
                     Caption = 'Tax Liable';
@@ -184,27 +183,13 @@ page 50000 CustomersAPIv1AJK
                     Caption = 'Tax Area Display Name';
                     Editable = false;
                 }
-                field(taxRegistrationNumber; TaxRegistrationNumber)
+                field(taxRegistrationNumber; "VAT Registration No.")
                 {
                     Caption = 'Tax Registration No.';
 
                     trigger OnValidate()
-                    var
-                        EnterpriseNoFieldRef: FieldRef;
                     begin
-                        if IsEnterpriseNumber(EnterpriseNoFieldRef) then begin
-                            if (Rec."Country/Region Code" <> BECountryCodeLbl) and (Rec."Country/Region Code" <> '') then begin
-                                Rec.Validate("VAT Registration No.", TaxRegistrationNumber);
-                                RegisterFieldSet(FieldNo("VAT Registration No."));
-                            end else begin
-                                EnterpriseNoFieldRef.Validate(TaxRegistrationNumber);
-                                EnterpriseNoFieldRef.Record().SetTable(Rec);
-                                RegisterFieldSet(FieldNo("VAT Registration No."));
-                            end;
-                        end else begin
-                            Rec.Validate("VAT Registration No.", TaxRegistrationNumber);
-                            RegisterFieldSet(FieldNo("VAT Registration No."));
-                        end;
+                        RegisterFieldSet(FieldNo("VAT Registration No."));
                     end;
                 }
                 field(currencyId; "Currency Id")
@@ -325,24 +310,6 @@ page 50000 CustomersAPIv1AJK
                 {
                     Caption = 'Last Modified Date';
                 }
-                field(shoeSize; Rec.ShoeSizeAJK)
-                {
-                    Caption = 'Show Size';
-
-                    trigger OnValidate()
-                    begin
-                        RegisterFieldSet(Rec.FieldNo(ShoeSizeAJK));
-                    end;
-                }
-                field(hairColor; Rec.HairColorAJK)
-                {
-                    Caption = 'Hair Color';
-
-                    trigger OnValidate()
-                    begin
-                        RegisterFieldSet(Rec.FieldNo(HairColorAJK));
-                    end;
-                }
                 part(customerFinancialDetails; "APIV2 - Cust Financial Details")
                 {
                     Caption = 'Customer Financial Details';
@@ -374,13 +341,6 @@ page 50000 CustomersAPIv1AJK
                     EntitySetName = 'agedAccountsReceivables';
                     SubPageLink = AccountId = Field(SystemId);
                 }
-                // part(contactsInformation; "APIV2 - Contacts Information")
-                // {
-                //     Caption = 'Contacts Information';
-                //     EntityName = 'contactInformation';
-                //     EntitySetName = 'contactsInformation';
-                //     SubPageLink = "Related Id" = field(SystemId), "Related Type" = const(1);
-                // }
             }
         }
     }
@@ -447,7 +407,6 @@ page 50000 CustomersAPIv1AJK
         TempFieldSet: Record 2000000041 temporary;
         GraphMgtGeneralTools: Codeunit "Graph Mgt - General Tools";
         LCYCurrencyCode: Code[10];
-        TaxRegistrationNumber: Text[50];
         CurrencyCodeTxt: Text;
         TaxAreaDisplayNameGlobal: Text;
         CurrencyValuesDontMatchErr: Label 'The currency values do not match to a specific Currency.';
@@ -459,30 +418,19 @@ page 50000 CustomersAPIv1AJK
         BlankGUID: Guid;
         NotProvidedCustomerNameErr: Label 'A "displayName" must be provided.', Comment = 'displayName is a field name and should not be translated.';
         BlankCustomerNameErr: Label 'The blank "displayName" is not allowed.', Comment = 'displayName is a field name and should not be translated.';
-        BECountryCodeLbl: Label 'BE', Locked = true;
 
     local procedure SetCalculatedFields()
     var
         TaxAreaBuffer: Record "Tax Area Buffer";
-        EnterpriseNoFieldRef: FieldRef;
     begin
         CurrencyCodeTxt := GraphMgtGeneralTools.TranslateNAVCurrencyCodeToCurrencyCode(LCYCurrencyCode, "Currency Code");
         TaxAreaDisplayNameGlobal := TaxAreaBuffer.GetTaxAreaDisplayName("Tax Area ID");
-
-        if IsEnterpriseNumber(EnterpriseNoFieldRef) then begin
-            if (Rec."Country/Region Code" <> BECountryCodeLbl) and (Rec."Country/Region Code" <> '') then
-                TaxRegistrationNumber := Rec."VAT Registration No."
-            else
-                TaxRegistrationNumber := EnterpriseNoFieldRef.Value();
-        end else
-            TaxRegistrationNumber := Rec."VAT Registration No.";
     end;
 
     local procedure ClearCalculatedFields()
     begin
         Clear(SystemId);
         Clear(TaxAreaDisplayNameGlobal);
-        Clear(TaxRegistrationNumber);
         TempFieldSet.DeleteAll();
     end;
 
@@ -495,18 +443,6 @@ page 50000 CustomersAPIv1AJK
         TempFieldSet.TableNo := Database::Customer;
         TempFieldSet.Validate("No.", FieldNo);
         TempFieldSet.Insert(true);
-    end;
-
-    procedure IsEnterpriseNumber(var EnterpriseNoFieldRef: FieldRef): Boolean
-    var
-        CustomerRecordRef: RecordRef;
-    begin
-        CustomerRecordRef.GetTable(Rec);
-        if CustomerRecordRef.FieldExist(11310) then begin
-            EnterpriseNoFieldRef := CustomerRecordRef.Field(11310);
-            exit((EnterpriseNoFieldRef.Type = FieldType::Text) and (EnterpriseNoFieldRef.Name = 'Enterprise No.'));
-        end else
-            exit(false);
     end;
 }
 
