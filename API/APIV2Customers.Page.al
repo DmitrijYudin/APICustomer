@@ -1,13 +1,20 @@
-page 50003 CustomersAPIv3AJK
+//postman GET
+// GET http://servbg:7048/BC170/api/DY/DYdemo/v2.0/companies({{CompanyName}})/DYcustomers
+// for customer 10000    http://servbg:7048/BC170/api/DY/DYdemo/v2.0/companies({{CompanyName}})/DYcustomers({{Customer 10000}})
+
+// Extension APIs:
+// https://<base URL>:<port>/<serverinstance>/api/<API publisher>/<API group>/<API version>
+
+page 50000 CustomersAPIPage
 {
     PageType = API;
-    APIPublisher = 'ajk';
-    APIGroup = 'demo';
+    APIPublisher = 'DY';
+    APIGroup = 'DYdemo';
     APIVersion = 'v2.0';
-    EntitySetName = 'customers';
-    EntityName = 'customer';
-    EntitySetCaption = 'Customers';
-    EntityCaption = 'Customer';
+    EntitySetName = 'DYcustomers';
+    EntityName = 'DYcustomer';
+    EntitySetCaption = 'DYCustomers';
+    EntityCaption = 'DYCustomer';
     ChangeTrackingAllowed = true;
     DelayedInsert = true;
     ODataKeyFields = SystemId;
@@ -20,10 +27,32 @@ page 50003 CustomersAPIv3AJK
         {
             repeater(Group)
             {
+                field(id; SystemId)
+                {
+                    Caption = 'Id';
+                    Editable = false;
+                }
+                field(number; "No.")
+                {
+                    Caption = 'No.';
+                }
+                field(displayName; Name)
+                {
+                    Caption = 'Display Name';
+                    ShowMandatory = true;
+
+                    trigger OnValidate()
+                    begin
+                        if Name = '' then
+                            Error(BlankCustomerNameErr);
+                        RegisterFieldSet(FieldNo(Name));
+                    end;
+                }
                 field(shoeSize; Rec.ShoeSizeAJK)
                 {
                     Caption = 'Show Size';
                     ShowCaption = true;
+                    ShowMandatory = true;
 
                     trigger OnValidate()
                     begin
@@ -41,28 +70,7 @@ page 50003 CustomersAPIv3AJK
                         RegisterFieldSet(Rec.FieldNo(HairColorAJK));
                     end;
                 }
-                field(id; Rec.SystemId)
-                {
-                    Caption = 'Id';
-                    Editable = false;
-                }
-                field(number; Rec."No.")
-                {
-                    Caption = 'No.';
-                }
-                field(displayName; Rec.Name)
-                {
-                    Caption = 'Display Name';
-                    ShowMandatory = true;
-
-                    trigger OnValidate()
-                    begin
-                        if Rec.Name = '' then
-                            Error(BlankCustomerNameErr);
-                        RegisterFieldSet(Rec.FieldNo(Name));
-                    end;
-                }
-                field(type; Rec."Contact Type")
+                field(type; "Contact Type")
                 {
                     Caption = 'Type';
 
@@ -152,6 +160,29 @@ page 50003 CustomersAPIv3AJK
                         RegisterFieldSet(FieldNo("Home Page"));
                     end;
                 }
+                field(salespersonCode; "Salesperson Code")
+                {
+                    Caption = 'Salesperson Code';
+
+                    trigger OnValidate()
+                    begin
+                        RegisterFieldSet(FieldNo("Salesperson Code"));
+                    end;
+                }
+                field(balanceDue; "Balance Due")
+                {
+                    Caption = 'Balance Due';
+                    Editable = false;
+                }
+                field(creditLimit; "Credit Limit (LCY)")
+                {
+                    Caption = 'Credit Limit';
+
+                    trigger OnValidate()
+                    begin
+                        RegisterFieldSet(FieldNo("Credit Limit (LCY)"));
+                    end;
+                }
                 field(taxLiable; "Tax Liable")
                 {
                     Caption = 'Tax Liable';
@@ -182,13 +213,27 @@ page 50003 CustomersAPIv3AJK
                     Caption = 'Tax Area Display Name';
                     Editable = false;
                 }
-                field(taxRegistrationNumber; "VAT Registration No.")
+                field(taxRegistrationNumber; TaxRegistrationNumber)
                 {
                     Caption = 'Tax Registration No.';
 
                     trigger OnValidate()
+                    var
+                        EnterpriseNoFieldRef: FieldRef;
                     begin
-                        RegisterFieldSet(FieldNo("VAT Registration No."));
+                        if IsEnterpriseNumber(EnterpriseNoFieldRef) then begin
+                            if (Rec."Country/Region Code" <> BECountryCodeLbl) and (Rec."Country/Region Code" <> '') then begin
+                                Rec.Validate("VAT Registration No.", TaxRegistrationNumber);
+                                RegisterFieldSet(FieldNo("VAT Registration No."));
+                            end else begin
+                                EnterpriseNoFieldRef.Validate(TaxRegistrationNumber);
+                                EnterpriseNoFieldRef.Record().SetTable(Rec);
+                                RegisterFieldSet(FieldNo("VAT Registration No."));
+                            end;
+                        end else begin
+                            Rec.Validate("VAT Registration No.", TaxRegistrationNumber);
+                            RegisterFieldSet(FieldNo("VAT Registration No."));
+                        end;
                     end;
                 }
                 field(currencyId; "Currency Id")
@@ -309,36 +354,43 @@ page 50003 CustomersAPIv3AJK
                 {
                     Caption = 'Last Modified Date';
                 }
-                // part(customerFinancialDetails; "APIV2 - Cust Financial Details")
+                part(customerFinancialDetails; "APIV2 - Cust Financial Details")
+                {
+                    Caption = 'Customer Financial Details';
+                    Multiplicity = ZeroOrOne;
+                    EntityName = 'customerFinancialDetail';
+                    EntitySetName = 'customerFinancialDetails';
+                    SubPageLink = SystemId = Field(SystemId);
+                }
+                part(picture; "APIV2 - Pictures")
+                {
+                    Caption = 'Picture';
+                    Multiplicity = ZeroOrOne;
+                    EntityName = 'picture';
+                    EntitySetName = 'pictures';
+                    SubPageLink = Id = Field(SystemId), "Parent Type" = const(1);
+                }
+                part(defaultDimensions; "APIV2 - Default Dimensions")
+                {
+                    Caption = 'Default Dimensions';
+                    EntityName = 'defaultDimension';
+                    EntitySetName = 'defaultDimensions';
+                    SubPageLink = ParentId = Field(SystemId), "Parent Type" = const(1);
+                }
+                part(agedAccountsReceivable; "APIV2 - Aged AR")
+                {
+                    Caption = 'Aged Accounts Receivable';
+                    Multiplicity = ZeroOrOne;
+                    EntityName = 'agedAccountsReceivable';
+                    EntitySetName = 'agedAccountsReceivables';
+                    SubPageLink = AccountId = Field(SystemId);
+                }
+                // part(contactsInformation; "APIV2 - Contacts Information")
                 // {
-                //     Caption = 'Customer Financial Details';
-                //     Multiplicity = ZeroOrOne;
-                //     EntityName = 'customerFinancialDetail';
-                //     EntitySetName = 'customerFinancialDetails';
-                //     SubPageLink = SystemId = Field(SystemId);
-                // }
-                // part(picture; "APIV2 - Pictures")
-                // {
-                //     Caption = 'Picture';
-                //     Multiplicity = ZeroOrOne;
-                //     EntityName = 'picture';
-                //     EntitySetName = 'pictures';
-                //     SubPageLink = Id = Field(SystemId), "Parent Type" = const(1);
-                // }
-                // part(defaultDimensions; "APIV2 - Default Dimensions")
-                // {
-                //     Caption = 'Default Dimensions';
-                //     EntityName = 'defaultDimension';
-                //     EntitySetName = 'defaultDimensions';
-                //     SubPageLink = ParentId = Field(SystemId), "Parent Type" = const(1);
-                // }
-                // part(agedAccountsReceivable; "APIV2 - Aged AR")
-                // {
-                //     Caption = 'Aged Accounts Receivable';
-                //     Multiplicity = ZeroOrOne;
-                //     EntityName = 'agedAccountsReceivable';
-                //     EntitySetName = 'agedAccountsReceivables';
-                //     SubPageLink = AccountId = Field(SystemId);
+                //     Caption = 'Contacts Information';
+                //     EntityName = 'contactInformation';
+                //     EntitySetName = 'contactsInformation';
+                //     SubPageLink = "Related Id" = field(SystemId), "Related Type" = const(1);
                 // }
             }
         }
@@ -406,6 +458,7 @@ page 50003 CustomersAPIv3AJK
         TempFieldSet: Record 2000000041 temporary;
         GraphMgtGeneralTools: Codeunit "Graph Mgt - General Tools";
         LCYCurrencyCode: Code[10];
+        TaxRegistrationNumber: Text[50];
         CurrencyCodeTxt: Text;
         TaxAreaDisplayNameGlobal: Text;
         CurrencyValuesDontMatchErr: Label 'The currency values do not match to a specific Currency.';
@@ -417,19 +470,30 @@ page 50003 CustomersAPIv3AJK
         BlankGUID: Guid;
         NotProvidedCustomerNameErr: Label 'A "displayName" must be provided.', Comment = 'displayName is a field name and should not be translated.';
         BlankCustomerNameErr: Label 'The blank "displayName" is not allowed.', Comment = 'displayName is a field name and should not be translated.';
+        BECountryCodeLbl: Label 'BE', Locked = true;
 
     local procedure SetCalculatedFields()
     var
         TaxAreaBuffer: Record "Tax Area Buffer";
+        EnterpriseNoFieldRef: FieldRef;
     begin
         CurrencyCodeTxt := GraphMgtGeneralTools.TranslateNAVCurrencyCodeToCurrencyCode(LCYCurrencyCode, "Currency Code");
         TaxAreaDisplayNameGlobal := TaxAreaBuffer.GetTaxAreaDisplayName("Tax Area ID");
+
+        if IsEnterpriseNumber(EnterpriseNoFieldRef) then begin
+            if (Rec."Country/Region Code" <> BECountryCodeLbl) and (Rec."Country/Region Code" <> '') then
+                TaxRegistrationNumber := Rec."VAT Registration No."
+            else
+                TaxRegistrationNumber := EnterpriseNoFieldRef.Value();
+        end else
+            TaxRegistrationNumber := Rec."VAT Registration No.";
     end;
 
     local procedure ClearCalculatedFields()
     begin
         Clear(SystemId);
         Clear(TaxAreaDisplayNameGlobal);
+        Clear(TaxRegistrationNumber);
         TempFieldSet.DeleteAll();
     end;
 
@@ -442,6 +506,18 @@ page 50003 CustomersAPIv3AJK
         TempFieldSet.TableNo := Database::Customer;
         TempFieldSet.Validate("No.", FieldNo);
         TempFieldSet.Insert(true);
+    end;
+
+    procedure IsEnterpriseNumber(var EnterpriseNoFieldRef: FieldRef): Boolean
+    var
+        CustomerRecordRef: RecordRef;
+    begin
+        CustomerRecordRef.GetTable(Rec);
+        if CustomerRecordRef.FieldExist(11310) then begin
+            EnterpriseNoFieldRef := CustomerRecordRef.Field(11310);
+            exit((EnterpriseNoFieldRef.Type = FieldType::Text) and (EnterpriseNoFieldRef.Name = 'Enterprise No.'));
+        end else
+            exit(false);
     end;
 }
 
