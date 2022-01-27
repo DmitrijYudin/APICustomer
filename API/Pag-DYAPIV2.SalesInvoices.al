@@ -1,3 +1,11 @@
+// POST http://servbg:7048/BC170/api/DY/DYdemo/v2.0/companies({{CompanyName}})/DYAPISalesInvoices?$select=id,number,customerName,invoiceDate,dueDate,webshopReferenceIdAJK
+// BODY
+// {
+//     "customerId":"{{Customer Dima}}",
+//     "invoiceDate":"2022-01-27",
+//     "dueDate":"2022-02-27",
+//     "webshopReferenceIdAJK": "webshop001"
+// }
 page 50002 "DY APIV2 - Sales Invoices"
 {
     PageType = API;
