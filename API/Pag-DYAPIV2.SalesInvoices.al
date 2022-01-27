@@ -6,6 +6,8 @@
 //     "dueDate":"2022-02-27",
 //     "webshopReferenceIdAJK": "webshop001"
 // }
+// GET http://servbg:7048/BC170/api/DY/DYdemo/v2.0/companies({{CompanyName}})/DYAPISalesInvoices?$select=id,number,customerName,invoiceDate,dueDate,webshopReferenceIdAJK
+// GET http://servbg:7048/BC170/api/DY/DYdemo/v2.0/companies({{CompanyName}})/DYAPISalesInvoices
 page 50002 "DY APIV2 - Sales Invoices"
 {
     PageType = API;
